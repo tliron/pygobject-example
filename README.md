@@ -27,4 +27,4 @@ for explanations):
 
 	sudo apt-get install gcc-4.4 valac-0.14 gobject-introspection libgirepository1.0-dev
 
-For an example using autotools and Vala, see the libgda-vala branch, see: http://git.gnome.org/browse/libgda
+For an example using autotools and Vala, see the libgda-vala branch of http://git.gnome.org/browse/libgda
