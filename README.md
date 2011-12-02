@@ -26,3 +26,5 @@ It was tested on Ubuntu 11.10. The following packages are necessary there (see n
 for explanations):
 
 	sudo apt-get install gcc-4.4 valac-0.14 gobject-introspection libgirepository1.0-dev
+
+For an example using autotools and Vala, see the libgda-vala branch, see: http://git.gnome.org/browse/libgda
