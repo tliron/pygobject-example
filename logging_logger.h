@@ -10,7 +10,6 @@ typedef struct _LoggingLoggerPrivate	LoggingLoggerPrivate;
 
 /**
  * LoggingLogger:
- * @name: the logger's name
  * 
  * Represents a logger.
  */
@@ -19,9 +18,6 @@ struct _LoggingLogger
 	// This is reserved space for the parent class
 	GObject parent_instance;
 
-	/*
-	 * logging_logger
-	 */
 	gchar *name;
 
 	// Private data

@@ -72,6 +72,20 @@ else
 	--pkg=gobject-2.0 \
 	--output=type/Logging-1.0.gir \
 	logging_logger.c logging_logger.h
+
+	echo "Building C executable..."
+
+	gcc \
+	$(pkg-config --cflags --libs gobject-2.0) \
+	test.c \
+	lib/liblogging.so \
+	$(pkg-config --libs gobject-2.0) \
+	-o test
+
+	echo "Test C..."
+
+	LD_LIBRARY_PATH=lib \
+	./test
 fi
 
 echo "Building typelib..."
@@ -82,20 +96,6 @@ g-ir-compiler \
 --shared-library=liblogging.so \
 --output=type/Logging-1.0.typelib \
 type/Logging-1.0.gir
-
-echo "Building C executable..."
-
-gcc \
-$(pkg-config --cflags --libs gobject-2.0) \
-test.c \
-lib/liblogging.so \
-$(pkg-config --libs gobject-2.0) \
--o test
-
-echo "Test C..."
-
-LD_LIBRARY_PATH=lib \
-./test
 
 echo "Test Python..."
 

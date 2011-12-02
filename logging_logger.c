@@ -11,15 +11,51 @@ struct _LoggingLoggerPrivate
 	int count;
 };
 
+enum
+{
+	PROP_0,
+	PROP_NAME
+};
+
+static void logging_logger_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
+{
+	LoggingLogger *self = LOGGING_LOGGER(object);
+	switch(property_id)
+	{
+		case PROP_NAME:
+			g_value_set_string(value, self->name);
+			break;
+	}
+}
+
+static void logging_logger_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
+{
+	LoggingLogger *self = LOGGING_LOGGER(object);
+	switch(property_id)
+	{
+		case PROP_NAME:
+			g_free(self->name);
+			self->name = g_value_dup_string(value);
+			break;
+	}
+}
+
 static void logging_logger_class_init(LoggingLoggerClass *klass)
 {
   	g_type_class_add_private(klass, sizeof(LoggingLoggerPrivate));
+  	
+	GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+	gobject_class->get_property = logging_logger_get_property;
+	gobject_class->set_property = logging_logger_set_property;
+	GParamSpec *pspec;
+	pspec = g_param_spec_string("name", "logger name", "The logger's name", "default", G_PARAM_READWRITE);
+	g_object_class_install_property(gobject_class, PROP_NAME, pspec);
+	
 	klass->log = logging_logger_log_default;
 }
 
 static void logging_logger_init(LoggingLogger *self)
 {
-	self->name = "default";
 	self->priv = LOGGING_LOGGER_GET_PRIVATE(self);
 	self->priv->count = 0;
 }
