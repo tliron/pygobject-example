@@ -14,26 +14,35 @@ mkdir type
 if [ "$1" == vala ]; then
 	echo "Building Vala library..."
 
-	# Note: we cannot generate C code and compile in the same call
-	valac \
-	--ccode \
-	logging.vala
-
-	# Note: generates broken gir if --gir= has a directory prefixed to it
+	# Note 1: Ubuntu package for valac: valac-0.14
+	# Note 2: Generates broken gir if --gir= has a directory prefixed to it
+	# Note 3: The -X switches for gcc are necessary!
+	# Note 4: The generated gir will include GObject-2.0. That gir is
+	#         included in Ubuntu package: libgirepository1.0-dev
 	valac \
 	--library=Logging \
 	--directory=tmp \
 	--gir=Logging-1.0.gir \
 	--output=liblogging.so \
-	-X -fPIC \
 	-X -shared \
+	-X -fPIC \
 	logging.vala
 	
 	mv tmp/liblogging.so lib
 	mv tmp/Logging-1.0.gir type
+
+	# Note: We cannot generate C code and compile in the same call
+	#       (We don't need the C code to run the test, but we are curious
+	#       as to what Vala is generating. The resulting code will be in
+	#       logging.c)
+	valac \
+	--ccode \
+	logging.vala
+	
 else
 	echo "Building C library..."
 
+	# Compile
 	gcc \
 	-c \
 	-fPIC \
@@ -42,24 +51,30 @@ else
 	$(pkg-config --libs gobject-2.0) \
 	-o tmp/logging.o
 
-	# The shared library
+	# Link the shared library
 	gcc \
 	-shared \
 	tmp/logging.o \
 	$(pkg-config --libs gobject-2.0) \
 	-o lib/liblogging.so
 
-	# The static library
-	# (Not used in this example, but we want it here for the sake of completion)
+	# Link the static library (not used in this example, but it's here
+	# for the sake of completion)
 	ar crs lib/liblogging.a tmp/logging.o
 	
 	echo "Creating gir..."
 	
-	# Ubuntu packages for g-ir-scanner:
-	# sudo apt-get install gobject-introspection libgirepository1.0-dev
-
-	# Note 1: g-ir-scanner does not work with gcc above version 4.4
-	# Note 2: if we do not include GObject-2.0, PyGObject will seem to work but not construct instances properly
+	# Note 1: Ubuntu package for g-ir-scanner: gobject-introspection
+	# Note 2: I could not get g-ir-scanner to work with gcc above version
+	#         4.4! I'm sure it's due to some new defaults that must be
+	#         explicitly changed, but could not find them. So, make sure
+	#         to install Ubuntu package: gcc-4.4
+	# Note 3: If we do not explicitly include GObject-2.0, PyGObject will
+	#         be able to to load the types, but will not actually call
+	#         class and instance init functions! (valac includes it by
+	#         default in its gir output)
+	# Note 4: The GObject-2.0 gir is included in Ubuntu package:
+	#         libgirepository1.0-dev
 	CC=gcc-4.4 \
 	LD_LIBRARY_PATH=lib \
 	g-ir-scanner \
@@ -90,8 +105,9 @@ fi
 
 echo "Building typelib..."
 
-# Note: --shared-library is really only necessary when using the git produced by Vala
-
+# Note 1: Ubuntu package for g-ir-compiler: gobject-introspection
+# Note 2: I don't know why, but --shared-library is really only necessary
+#         when using the gir produced by Vala
 g-ir-compiler \
 --shared-library=liblogging.so \
 --output=type/Logging-1.0.typelib \
@@ -99,6 +115,12 @@ type/Logging-1.0.gir
 
 echo "Test Python..."
 
+# Note 1: Ubuntu's default path for typelib files seems to be:
+#         /usr/lib/girepository-1.0/.
+# Note 2: It is also possible to programmatically change the
+#         GI_TYPELIB_PATH environment var in Python (os.environ API).
+#         If you do so, make sure to set it before importing from
+#         gi.repository.
 LD_LIBRARY_PATH=lib \
 GI_TYPELIB_PATH=type \
 ./test.py
