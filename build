@@ -106,8 +106,9 @@ fi
 echo "Building typelib..."
 
 # Note 1: Ubuntu package for g-ir-compiler: gobject-introspection
-# Note 2: I don't know why, but --shared-library is really only necessary
-#         when using the gir produced by Vala
+# Note 2: The --shared-library switch is really only necessary when using
+#         the gir produced by valac, because it does not include the
+#         'shared-library' attribute in <namespace> tag.
 g-ir-compiler \
 --shared-library=liblogging.so \
 --output=type/Logging-1.0.typelib \
