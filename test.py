@@ -2,9 +2,8 @@
 
 from gi.repository import Logging
 
-logger = Logging.Logger()
+logger = Logging.Logger(name='chipy')
 
-logger.set_property('name', 'chipy')
 logger.log("ChiPy thanks crowdSPRING for hosting!")
 logger.log("And can't wait for 'beer time'.")
 logger.log("The Ruby folk are probably drinking vitamin water right now.")
