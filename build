@@ -1,0 +1,104 @@
+#!/bin/bash
+
+echo "Cleaning..."
+
+rm -rf tmp
+rm -rf lib
+rm -rf type
+rm -f test
+
+mkdir tmp
+mkdir lib
+mkdir type
+
+if [ "$1" == vala ]; then
+	echo "Building Vala library..."
+
+	# Note: we cannot generate C code and compile in the same call
+	valac \
+	--ccode \
+	logging.vala
+
+	# Note: generates broken gir if --gir= has a directory prefixed to it
+	valac \
+	--library=Logging \
+	--directory=tmp \
+	--gir=Logging-1.0.gir \
+	--output=liblogging.so \
+	-X -fPIC \
+	-X -shared \
+	logging.vala
+	
+	mv tmp/liblogging.so lib
+	mv tmp/Logging-1.0.gir type
+else
+	echo "Building C library..."
+
+	gcc \
+	-c \
+	-fPIC \
+	$(pkg-config --cflags --libs gobject-2.0) \
+	logging_logger.c \
+	$(pkg-config --libs gobject-2.0) \
+	-o tmp/logging.o
+
+	# The shared library
+	gcc \
+	-shared \
+	tmp/logging.o \
+	$(pkg-config --libs gobject-2.0) \
+	-o lib/liblogging.so
+
+	# The static library
+	# (Not used in this example, but we want it here for the sake of completion)
+	ar crs lib/liblogging.a tmp/logging.o
+	
+	echo "Creating gir..."
+	
+	# Ubuntu packages for g-ir-scanner:
+	# sudo apt-get install gobject-introspection libgirepository1.0-dev
+
+	# Note 1: g-ir-scanner does not work with gcc above version 4.4
+	# Note 2: if we do not include GObject-2.0, PyGObject will seem to work but not construct instances properly
+	CC=gcc-4.4 \
+	LD_LIBRARY_PATH=lib \
+	g-ir-scanner \
+	--warn-all \
+	--namespace=Logging \
+	--nsversion=1.0 \
+	--include=GObject-2.0 \
+	--library-path=lib \
+	--library=logging \
+	--pkg=gobject-2.0 \
+	--output=type/Logging-1.0.gir \
+	logging_logger.c logging_logger.h
+fi
+
+echo "Building typelib..."
+
+# Note: --shared-library is really only necessary when using the git produced by Vala
+
+g-ir-compiler \
+--shared-library=liblogging.so \
+--output=type/Logging-1.0.typelib \
+type/Logging-1.0.gir
+
+echo "Building C executable..."
+
+gcc \
+$(pkg-config --cflags --libs gobject-2.0) \
+test.c \
+lib/liblogging.so \
+$(pkg-config --libs gobject-2.0) \
+-o test
+
+echo "Test C..."
+
+LD_LIBRARY_PATH=lib \
+./test
+
+echo "Test Python..."
+
+LD_LIBRARY_PATH=lib \
+GI_TYPELIB_PATH=type \
+./test.py
