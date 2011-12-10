@@ -19,7 +19,9 @@ If run as "./build vala", it will build an equivalent library written in Vala, a
 Python application. This is meant to show how you can use Vala instead of C to the exact same effect.
 
 The script was tested on Ubuntu 11.10. It was written for a presentation on PyGObject for the Chicago
-Python group (ChiPy) on December 8th, 2011.
+Python group (ChiPy) on December 8th, 2011. A recording of this presentation is available here:
+
+	http://www.youtube.com/watch?v=6QrGmA_RR4E
 
 It was tested on Ubuntu 11.10. The following packages are necessary there (see notes in the build script
 for explanations):
